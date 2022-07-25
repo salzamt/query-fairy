@@ -13,8 +13,10 @@ module QueryFairy
       #   "SELECT * FROM tasks_development.tasks",
       #   {analyze: true}
       # )
+      #
+      # explain  FORMAT = JSON select * from tasks where id < 10 ;
       result_analyze = QueryFairy.analyze_sql(
-        "SELECT * FROM tasks_development.tasks",
+        "SELECT * FROM tasks_development.tasks where id > 3",
         {analyze: true}
       )
       require 'pry'; binding.pry
@@ -33,7 +35,7 @@ module QueryFairy
     result = ActiveRecord::Base.connection.execute("#{prefix} #{raw_sql}").to_a
 
     if [:json, :hash, :pretty_json].include?(opts[:format])
-      raw_json = result[0].fetch("QUERY PLAN")
+      raw_json = result[0].fetch("EXPLAIN")
       if opts[:format] == :json
         raw_json
       elsif opts[:format] == :hash
@@ -42,9 +44,10 @@ module QueryFairy
         JSON.pretty_generate(JSON.parse(raw_json))
       end
     else
+      require 'pry'; binding.pry
       result.map do |el|
-        el.fetch("QUERY PLAN")
-      end.join("\n")
+        el.fetch("EXPLAIN")
+      end.join("\n")co
     end
   end
 
